@@ -1,48 +1,67 @@
-//浙江大学 数据结构
-//堆/优先队列 Heap
+#include <stdio.h>
+#include <stdlib.h>
+#include "heap.h"
 
-//使用数组表示的完全二叉树
-//任一节点根最大/最小
-
-#define MaxData 65535
-typedef int ElementType;
-//最大堆的定义
-typedef struct Heapstruct *MaxHeap;
-struct Heapstruct
-{
-    ElementType *Elements; //存储数组
-    int Size; //堆的元素个数 （数组只知道头指针，不知道大小
-    int Capacity; //最大容量
-};
-
-//最大堆的创建
+//堆的初始化
 MaxHeap CreatHeap(int MaxSize)
 {
-    MaxHeap MH;
-    MH = (MaxHeap)malloc(sizeof(Heapstruct));
-    MH->Elements = (ElementType*)malloc((MaxSize+1)*sizeof(ElementType));
-    MH->Size = 0;
-    MH->Capacity = MaxSize;
-    MH->Elements[0] = MaxData; //数组首位放置哨兵
-    return MH;
+    MaxHeap H = (MaxHeap)malloc(sizeof(struct HeapNode)); //malloc函数返回void*类型，故需要强制类型转换
+    H->Elements = (ElementType*)malloc((MaxSize+1) * sizeof(ElementType));
+    H->Elements[0] = 65535;//哨兵
+    H->Size = 0;
+    H->Capacity = MaxSize;
+    return H;
 }
 
-//Insert if not full
-void InsertHeap(ElementType item, MaxHeap MH)
+//堆的插入元素
+void InsertHeap(MaxHeap H, ElementType item)
 {
-    int i;
-    if (MH->Size == MH->Capacity)
+    if (H->Size == H->Capacity)
     {
-        printf("The Heap is Full !");
+        printf("the heap is full");
         return;
     }
-    i = ++MH->Size;
-    for (; MH->Elements[i/2]<item; i /= 2)//从Elements(i)开始逐次取其父节点与item比较，比item小就换到其子节点,i==1时，i/2=0,遇到哨兵元素，控制退出循环
-        MH->Elements[i] = MH->Elements[i/2]; //即将小于item的根节点依次换到他的子节点上
-    MH->Elements[i] = item; //最后将item插入空出来的节点上
+    int i = ++H->Size;
+    for ( ; H->Elements[i/2] < item; i /= 2)
+        H->Elements[i] = H->Elements[i/2];
+    H->Elements[i] = item;
 }
 
-//Delete item from Heap if not empty
-void DeleteHeap(MaxHeap MH)  //delete 删掉根上data，然后重建heap（1.母节点大于子节点；2.完全树）
+//堆的删除/推出元素
+ElementType DeleteHeap(MaxHeap H)
 {
+    if (H->Size == 0)
+    {
+        printf("the heap is empty");
+        return ERROR;
+    }
+    ElementType MaxData,Temp;
+    int Parent,Child;
+    MaxData = H->Elements[1];
+    Temp = H->Elements[H->Size--];
+    for (Parent = 1; Parent*2 <= H->Size; Parent = Child)  //当Parent的子节点序号大于Size，即此时Parent没子节点，为叶子节点
+    {
+        Child = Parent*2;
+        if (H->Elements[Child] < H->Elements[Child+1] && Child != H->Size) //首先选出Parent较大的孩子作为Child
+            Child++;
+        if (Temp > H->Elements[Child]) //比较Temp和Child所指元素的大小，若Temp大则跳出循环，直接将Temp赋予此时的空节点
+            break;
+        else
+            H->Elements[Parent] = H->Elements[Child]; //否则将该节点的较大子节点值赋予它
+    }
+    H->Elements[Parent] = Temp;
+    return MaxData;
+}
 
+//打印堆
+void PrintHeap(MaxHeap H)
+{
+    printf("当前完全树为：\n");
+    for (int i=0; i<H->Size; i++)
+    {
+        if (i==1 || i==3 || i==7)
+            printf("\n");
+        printf("%d ",H->Elements[i+1]);
+    }
+    printf("\n");
+}
